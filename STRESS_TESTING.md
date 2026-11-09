@@ -24,6 +24,14 @@ python -m stress_testing.cli --config config/stress-test.example.yaml
 
 The package can also be invoked with `python -m stress_testing.cli` without an editable install. The example expects a local service listening on port 8000 with a `/health` endpoint.
 
+To open the optional live dashboard during a test:
+
+```bash
+python -m stress_testing.cli --config config/stress-test.example.yaml --dashboard
+```
+
+The dashboard binds only to `127.0.0.1` (default port `8080`) and reads the same live counters used in the final report. It has no wildcard CORS, external scripts, or public bind option. Open `http://127.0.0.1:8080/` on the machine running the test.
+
 To save a JSON report:
 
 ```bash
