@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import ipaddress
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urlparse
@@ -88,8 +89,8 @@ def load_config(path: str | Path, *, allow_external_target: bool = False) -> Con
             raise ValueError("Endpoint paths must begin with one '/'")
         if method not in {"GET", "HEAD"}:
             raise ValueError("Only GET and HEAD are enabled; do not use this tool for state-changing requests")
-        if weight <= 0:
-            raise ValueError("Endpoint weights must be positive")
+        if not math.isfinite(weight) or weight <= 0:
+            raise ValueError("Endpoint weights must be finite and positive")
         endpoints.append(Endpoint(route, method, weight))
 
     return Config(base_url, duration, concurrency, ramp, interval, timeout, tuple(endpoints))
