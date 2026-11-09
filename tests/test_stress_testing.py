@@ -5,7 +5,10 @@ from pathlib import Path
 import yaml
 
 from stress_testing.config import load_config
-from stress_testing.engine import Results
+from stress_testing.engine import Results, StressTestEngine
+from stress_testing.config import Config, Endpoint
+from aiohttp.test_utils import TestClient, TestServer
+from stress_testing.dashboard import create_app
 
 
 class ConfigTests(unittest.TestCase):
@@ -60,6 +63,24 @@ class MetricsTests(unittest.TestCase):
         self.assertEqual(summary["status_codes"]["503"], 1)
         self.assertEqual(summary["errors"]["TimeoutError"], 1)
         self.assertEqual(summary["latency_ms"]["average"], 20)
+
+
+class DashboardTests(unittest.IsolatedAsyncioTestCase):
+    async def test_live_metrics_endpoint_and_local_dashboard(self):
+        config = Config("http://127.0.0.1:8000", 10, 1, 0, 0.1, 5, (Endpoint("/health", "GET", 1),))
+        engine = StressTestEngine(config)
+        engine.results.record(latency_ms=12, status=200)
+        client = TestClient(TestServer(create_app(engine)))
+        await client.start_server()
+        self.addAsyncCleanup(client.close)
+        response = await client.get("/api/metrics")
+        self.assertEqual(response.status, 200)
+        payload = await response.json()
+        self.assertEqual(payload["total_requests"], 1)
+        page = await client.get("/")
+        self.assertEqual(page.status, 200)
+        self.assertIn("Pi Node Stress Test", await page.text())
+        self.assertNotIn("Access-Control-Allow-Origin", response.headers)
 
 
 if __name__ == "__main__":
