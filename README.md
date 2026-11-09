@@ -309,7 +309,7 @@ See [node-status/node-status.md](node-status/node-status.md) for full documentat
 
 ## Optional HTTP Stress Testing
 
-The repository includes an isolated, safe-by-default HTTP load-testing utility for local development. It is not installed in the Pi Node image and does not alter stellar-core, Horizon, PostgreSQL, or node data. See [STRESS_TESTING.md](STRESS_TESTING.md) for installation, configuration, authorization requirements, and test commands. The default configuration targets loopback only and permits read-only GET/HEAD requests.
+The repository includes an isolated, safe-by-default HTTP load-testing utility with an optional loopback-only live dashboard. It is not installed in the Pi Node image and does not alter stellar-core, Horizon, PostgreSQL, or node data. See [STRESS_TESTING.md](STRESS_TESTING.md) for installation, configuration, authorization requirements, dashboard use, and test commands. The default configuration targets loopback only and permits read-only GET/HEAD requests.
 
 ## Troubleshooting
 
