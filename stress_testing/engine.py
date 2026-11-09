@@ -20,11 +20,17 @@ class Results:
     failed: int = 0
     status_codes: dict[str, int] = field(default_factory=dict)
     latencies_ms: list[float] = field(default_factory=list)
+    latency_total_ms: float = 0.0
     errors: dict[str, int] = field(default_factory=dict)
 
     def record(self, *, latency_ms: float, status: int | None = None, error: str | None = None) -> None:
         self.total += 1
-        self.latencies_ms.append(latency_ms)
+        self.latency_total_ms += latency_ms
+        # Keep percentile samples bounded during long/high-volume runs.
+        if len(self.latencies_ms) < 10000:
+            self.latencies_ms.append(latency_ms)
+        else:
+            self.latencies_ms[self.total % 10000] = latency_ms
         if status is not None:
             key = str(status)
             self.status_codes[key] = self.status_codes.get(key, 0) + 1
@@ -54,7 +60,7 @@ class Results:
             "success_rate_percent": round(self.successful / self.total * 100, 2) if self.total else 0.0,
             "requests_per_second": round(self.total / elapsed_seconds, 2) if elapsed_seconds > 0 else 0.0,
             "latency_ms": {
-                "average": round(sum(self.latencies_ms) / len(self.latencies_ms), 2) if self.latencies_ms else 0.0,
+                "average": round(self.latency_total_ms / self.total, 2) if self.total else 0.0,
                 "p50": self._percentile(self.latencies_ms, 0.50),
                 "p95": self._percentile(self.latencies_ms, 0.95),
                 "p99": self._percentile(self.latencies_ms, 0.99),
