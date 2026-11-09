@@ -75,14 +75,21 @@ class StressTestEngine:
         self.config = config
         self.results = Results()
         self._stop = asyncio.Event()
+        self._started_monotonic: float | None = None
         self._endpoints = [endpoint for endpoint in config.endpoints]
         self._weights = [endpoint.weight for endpoint in self._endpoints]
 
     def stop(self) -> None:
         self._stop.set()
 
+    def snapshot(self) -> dict[str, Any]:
+        """Return a live metrics snapshot for the loopback dashboard."""
+        elapsed = max(0.0, time.monotonic() - self._started_monotonic) if self._started_monotonic else 0.0
+        return self.results.summary(elapsed)
+
     async def run(self) -> dict[str, Any]:
         started = time.monotonic()
+        self._started_monotonic = started
         deadline = started + self.config.duration
         timeout = aiohttp.ClientTimeout(total=self.config.timeout_seconds)
         connector = aiohttp.TCPConnector(limit=self.config.concurrency, enable_cleanup_closed=True)
